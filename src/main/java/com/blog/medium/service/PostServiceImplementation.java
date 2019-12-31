@@ -64,7 +64,7 @@ public class PostServiceImplementation implements PostService {
 
     private void checkNullAndValidArguments(String username, String category, String orderBy, String direction, String operation, String page, String size){
 
-        if( !(username.toLowerCase().equals("nouser")) && !(username.equals("admin")) ){
+        if( !(username.toLowerCase().equals("nouser")) && !(userRepository.findById(2L).isPresent()) ){
             throw new NotFoundException("User: '" + username + "' does not exist");
         }
         else if(category.contains(",")){
@@ -91,8 +91,12 @@ public class PostServiceImplementation implements PostService {
             }
         }
 
+        if(Integer.parseInt(size)<1){
+            throw new InvalidArgumentException("Posts fetch size cannot be less than 0");
+        }
+
         if(Integer.parseInt(size) > 25){
-            throw new NotFoundException("Posts fetch size should be less than 25");
+            throw new InvalidArgumentException("Posts fetch size should be less than 25");
         }
         if(( !(direction.equals("ASC")) && (!(direction.equals("DESC"))) )) {
             throw new InvalidArgumentException("Direction/Sort By: " + direction + " is not valid");
@@ -126,7 +130,7 @@ public class PostServiceImplementation implements PostService {
     No user exists:
     User user = new User(); user.setEmail("admin@admin.com");user.setUsername("admin");user.setPassword("admin");
     */
-        Optional<User> userOptional = userRepository.findById(1L);
+        Optional<User> userOptional = userRepository.findById(2L);
 /*
         if(!(userOptional.isPresent())){
             throw new NotFoundException("User with id = " + id + " not found");
