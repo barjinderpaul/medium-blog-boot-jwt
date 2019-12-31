@@ -64,7 +64,7 @@ public class PostServiceImplementation implements PostService {
 
     private void checkNullAndValidArguments(String username, String category, String orderBy, String direction, String operation, String page, String size){
 
-        if( !(username.toLowerCase().equals("nouser")) && !(userRepository.findById(2L).isPresent()) ){
+        if( !(username.toLowerCase().equals("nouser")) && (userRepository.findByUsername(username.toLowerCase()) == null)){
             throw new NotFoundException("User: '" + username + "' does not exist");
         }
         else if(category.contains(",")){
