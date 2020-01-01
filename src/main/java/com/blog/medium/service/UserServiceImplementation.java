@@ -23,4 +23,16 @@ public class UserServiceImplementation implements UserService {
     public List<User> getAllUsers() {
         return (List<User>) userRepository.findAll();
     }
+
+    @Override
+    public Long saveUser(String username, String password, String email) {
+        User user = new User();
+
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setEmail(email);
+
+        Long userId = userRepository.save(user).getId();
+        return userId;
+    }
 }
