@@ -125,6 +125,18 @@ public class ApiRestController {
 
     }
 
+    @GetMapping("/api/posts/category")
+    public List<Category> getCategories(){
+        List<Category> categories = categoryService.findAll();
+        return categories;
+    }
+
+    @PostMapping("/api/posts/category")
+    public Category addCategory(@RequestParam(value = "category", required = false) String categoryName){
+        Long category_id = categoryService.addCategory(categoryName);
+        return categoryService.getCategory(category_id);
+    }
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.blog.medium.service;
 
+import com.blog.medium.exceptions.InvalidArgumentException;
 import com.blog.medium.model.Category;
 import com.blog.medium.model.Post;
 import com.blog.medium.repository.CategoryRepository;
@@ -48,5 +49,21 @@ public class CategoryServiceImplementation implements CategoryService {
         Page<Post> data= postRepository.findByCategories(categoryName,pageable);
         System.out.println("PADASDASD DATAAA = " + data.getContent());
         return data.getContent();
+    }
+
+    @Override
+    public List<Category> findAll() {
+        return categoryRepository.findAll();
+    }
+
+    @Override
+    public Long addCategory(String categoryName) {
+        if(categoryName == null || categoryName.equals("")){
+            throw  new InvalidArgumentException("Category name cannot null/empty");
+        }
+        Category category = new Category();
+        category.setCategoryName(categoryName);
+        Long categoryId = categoryRepository.save(category).getCategory_id();
+        return categoryId;
     }
 }
