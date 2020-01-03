@@ -44,6 +44,12 @@ public class UserServiceImplementation implements UserService {
         user.setEmail(email);
 
         Role userRole = roleRepository.findByRoleName("USER");
+        if(userRole == null ){
+            Role userR = new Role();
+            userR.setRoleName("USER");
+            roleRepository.save(userR);
+            userRole = roleRepository.findByRoleName("USER");
+        }
         Set<Role> userRoles = new HashSet<>();
         userRoles.add(userRole);
         user.setRoles(userRoles);
@@ -69,6 +75,12 @@ public class UserServiceImplementation implements UserService {
         user.setEmail(email);
 
         Role userRole = roleRepository.findByRoleName("ADMIN");
+        if(userRole == null) {
+            Role adminRole = new Role();
+            adminRole.setRoleName("ADMIN");
+            roleRepository.save(adminRole);
+            userRole = roleRepository.findByRoleName("ADMIN");
+        }
         Set<Role> userRoles = new HashSet<>();
         userRoles.add(userRole);
         user.setRoles(userRoles);
