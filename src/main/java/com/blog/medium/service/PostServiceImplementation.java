@@ -159,10 +159,17 @@ public class PostServiceImplementation implements PostService {
 
         for (String category : categories) {
             Category categoryFound = categoryRepository.findByCategoryName(category);
+            if(categoryFound == null){
+                Category newCategory = new Category();
+                newCategory.setCategoryName(category);
+                categoryFound = newCategory;
+            }
             checkValidCategory(categoryFound);
             categoryFound.getPosts().add(post);
             post.getCategories().add(categoryFound);
         }
+
+
 
         user.getPosts().add(post);
         userRepository.save(user);
@@ -202,6 +209,11 @@ public class PostServiceImplementation implements PostService {
 
         for (String categoryName : categoriesList) {
             Category category = categoryRepository.findByCategoryName(categoryName);
+            if(category == null) {
+                Category newCategory = new Category();
+                newCategory.setCategoryName(categoryName);
+                category = newCategory;
+            }
             checkValidCategory(category);
             if (!(postFromDB.getCategories().contains(category))) {
                 postFromDB.getCategories().add(category);
