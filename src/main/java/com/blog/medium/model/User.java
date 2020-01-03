@@ -1,6 +1,8 @@
 package com.blog.medium.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
@@ -14,6 +16,8 @@ import java.util.*;
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,6 +59,12 @@ public class User {
     @OneToMany(mappedBy="user")
     @OrderBy("post_id")
     private List<Post> posts = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "userRole",
+            joinColumns = { @JoinColumn(name = "user_id", unique = false) },
+            inverseJoinColumns = { @JoinColumn(name = "role_id", unique = false) })
+    private Set<Role> roles = new LinkedHashSet<>();
 
     public Long getId() {
         return id;

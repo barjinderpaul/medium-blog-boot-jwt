@@ -11,4 +11,8 @@ public interface UserService {
     List<User> getAllUsers();
 
     Long saveUser(String username, String password, String email);
+
+    List<User> getAllAdminUsers();
+
+    Long saveAdminUser(String username, String password, String email);
 }

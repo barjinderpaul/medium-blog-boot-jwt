@@ -3,6 +3,8 @@ package com.blog.medium.model;
 import javax.persistence.*;
 import com.blog.medium.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,6 +18,8 @@ import java.util.*;
 @Entity
 @Table(name = "posts")
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

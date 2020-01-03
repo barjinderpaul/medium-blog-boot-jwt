@@ -59,7 +59,7 @@ public class PostServiceImplementation implements PostService {
     }
 
     private void checkPostAndUser(Post post, String username){
-        if( !(post.getUser().getUsername().equals(username)) ){
+        if( !(post.getUser().getUsername().equals(username)) && !(userRepository.findByUsername(username).getRoles().toString().contains("ADMIN"))) {
             throw new UnauthorizedAccessException("Username : " + username + " has no right access to this post");
         }
     }

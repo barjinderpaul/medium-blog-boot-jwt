@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface UserRepository extends CrudRepository<User,Long> {
 //    User findUserByUsername(String userName);
@@ -14,4 +16,6 @@ public interface UserRepository extends CrudRepository<User,Long> {
     User findByUsernameAndPasswordAndEmail(String username, String password, String email);
 
     Page findPostsByUsernameAndPosts_Categories_categoryNameContains(String username, String category, Pageable pageable);
+
+    List<User> findAllByRoles_roleName(String role);
 }
