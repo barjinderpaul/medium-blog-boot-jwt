@@ -1,6 +1,7 @@
 package com.blog.medium.service;
 import com.blog.medium.exceptions.InvalidArgumentException;
 import com.blog.medium.exceptions.NotFoundException;
+import com.blog.medium.exceptions.UnauthorizedAccessException;
 import com.blog.medium.model.Category;
 import com.blog.medium.model.Post;
 import com.blog.medium.model.User;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -53,6 +55,12 @@ public class PostServiceImplementation implements PostService {
         }
         catch (NumberFormatException e){
             throw new InvalidArgumentException("Please, enter a valid id");
+        }
+    }
+
+    private void checkPostAndUser(Post post, String username){
+        if( !(post.getUser().getUsername().equals(username)) ){
+            throw new UnauthorizedAccessException("Username : " + username + " has no right access to this post");
         }
     }
 
@@ -125,12 +133,16 @@ public class PostServiceImplementation implements PostService {
         return post.get();
     }
 
-    public Long addPost(String title, String content, List<String> categories) {
+    public Long addPost(String title, String content, List<String> categories, String username) {
     /*
     No user exists:
     User user = new User(); user.setEmail("admin@admin.com");user.setUsername("admin");user.setPassword("admin");
     */
-        Optional<User> userOptional = userRepository.findById(2L);
+        User userDB = userRepository.findByUsername(username);
+        if(userDB == null) {
+            throw new InvalidArgumentException("User: " + username + " does not exists");
+        }
+        Optional<User> userOptional = userRepository.findById(userDB.getId());
 /*
         if(!(userOptional.isPresent())){
             throw new NotFoundException("User with id = " + id + " not found");
@@ -158,17 +170,22 @@ public class PostServiceImplementation implements PostService {
         return id;
     }
 
-    public void deletePost(Long id) {
+    public void deletePost(Long id, String username) {
 
         Optional<Post> optionalPost = postRepository.findById(id);
 
         if(!(optionalPost.isPresent() ) ){
             throw new NotFoundException("DELETE : No post found with id + " + id);
         }
+
+        Post post = optionalPost.get();
+
+        checkPostAndUser(post,username);
+
         postRepository.deleteById(id);
     }
 
-    public Long updatePost(String id, String title, String content, List<String> categoriesList) {
+    public Long updatePost(String id, String title, String content, List<String> categoriesList, String username) {
         checkValidId(id);
         Long postId = Long.parseLong(id);
 
@@ -177,6 +194,9 @@ public class PostServiceImplementation implements PostService {
                 throw new NotFoundException("PUT : No post found with id + " + postId);
         }
         Post postFromDB = optionalPost.get();
+
+        checkPostAndUser(postFromDB,username);
+
         postFromDB.setContent(content);
         postFromDB.setTitle(title);
 
@@ -201,7 +221,7 @@ public class PostServiceImplementation implements PostService {
     }
 
     @Override
-    public Long updatePostPatch(String id, String title, String content, String[] categories) {
+    public Long updatePostPatch(String id, String title, String content, String[] categories, String username) {
 
         checkValidId(id);
         Long postId = Long.parseLong(id);
@@ -211,6 +231,11 @@ public class PostServiceImplementation implements PostService {
             throw new NotFoundException("PATCH : No post found with id + " + postId);
         }
         Post post = (Post) postOptional.get();
+
+        System.out.println("USERNAME, USERNAME POST :" + username + " " + post.getUser().getUsername());
+
+        checkPostAndUser(post,username);
+
         if(!(title.equals(""))){
             System.out.println("Title here");
             post.setTitle(title);

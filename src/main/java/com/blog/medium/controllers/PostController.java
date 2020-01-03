@@ -1,3 +1,4 @@
+/*
 package com.blog.medium.controllers;
 
 import com.blog.medium.model.Category;
@@ -47,16 +48,20 @@ public class PostController {
     {
 
         Page data =  postService.getAllPostsHome(page,size,orderBy,direction);
+*/
 /*        List<Category> categories = categoryService.getAllTags();
-        List<User> users = userService.getAllUsers(page,size,orderBy,direction);*/
+        List<User> users = userService.getAllUsers(page,size,orderBy,direction);*//*
+
 
         ModelAndView modelAndView = new ModelAndView();
 
         modelAndView.setViewName("blogPosts");
         modelAndView.addObject("allPosts",data.getContent());
-        modelAndView.addObject("postsPage",data);/*
+        modelAndView.addObject("postsPage",data);*/
+/*
         modelAndView.addObject("allCategories",categories);
-        modelAndView.addObject("allUsers",users);*/
+        modelAndView.addObject("allUsers",users);*//*
+
         modelAndView.addObject("numbers", IntStream.range(0,data.getTotalPages()).toArray());
         return modelAndView;
 
@@ -206,3 +211,4 @@ public class PostController {
 
 
 }
+*/

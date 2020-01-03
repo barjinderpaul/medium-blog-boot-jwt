@@ -10,10 +10,10 @@ import java.util.Set;
 public interface PostService {
     List<Post> getAllPosts();
     Post getPost(String id);
-    Long addPost(String title, String content, List<String> categoriesList);
-    void deletePost(Long id);
-    Long updatePost(String id, String title, String content, List<String> categoriesList);
-    Long updatePostPatch(String id,String title,String content,String [] categories);
+    Long addPost(String title, String content, List<String> categoriesList, String username);
+    void deletePost(Long id, String username);
+    Long updatePost(String id, String title, String content, List<String> categoriesList, String username);
+    Long updatePostPatch(String id,String title,String content,String [] categories, String username);
 
     Page<Post> filterPostsMethodWithoutSearch(String username, String tagName, String orderBy, String direction, String operation, String page, String size);
 

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -75,6 +76,8 @@ public class ApiRestController {
             throw new InvalidArgumentException("content cannot be null");
         }
 
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
         List<String> categoriesList;
         if(categories != null) {
             categoriesList = Arrays.asList(categories);
@@ -83,7 +86,7 @@ public class ApiRestController {
             categoriesList = new ArrayList<>();
             categoriesList.add("uncategorized");
         }
-        Long post_id = postService.addPost(title,content,categoriesList);
+        Long post_id = postService.addPost(title,content,categoriesList,username);
         Post post = postService.getPost(post_id.toString());
         return post;
 
@@ -91,7 +94,8 @@ public class ApiRestController {
 
     @RequestMapping(value = "/api/posts/{id}",method = RequestMethod.DELETE)
     public void deletePost(@PathVariable("id") Long id) {
-        postService.deletePost(id);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        postService.deletePost(id, username);
     }
 
     @RequestMapping(value = "/api/posts/{id}",method = RequestMethod.PUT)
@@ -104,6 +108,9 @@ public class ApiRestController {
             throw new InvalidArgumentException("content cannot be null");
         }
 
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+
         List<String> categoriesList;
         if(categories != null) {
             categoriesList = Arrays.asList(categories);
@@ -111,16 +118,18 @@ public class ApiRestController {
         else{
             categoriesList = new ArrayList<>();
         }
-        Long post_id = postService.updatePost(id,title,content,categoriesList);
+        Long post_id = postService.updatePost(id,title,content,categoriesList,username);
         Post post = postService.getPost(post_id.toString());
         return post;
     }
 
     @PatchMapping("/api/posts/{id}")
     public Post updatePostPatch(@PathVariable("id") String id , @RequestParam(value = "title", required = false, defaultValue = "") String title, @RequestParam(value = "content", required = false, defaultValue = "") String content, @RequestParam(value = "categories" , required = false) String[] categories){
-
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println("USERNAME , PATCH  " + username);
         System.out.println("title, content in repository = " + title + "  " + content);
-        Long post_id = postService.updatePostPatch(id,title,content,categories);
+        Long post_id = postService.updatePostPatch(id,title,content,categories,username);
+
         return postService.getPost(post_id.toString());
 
     }

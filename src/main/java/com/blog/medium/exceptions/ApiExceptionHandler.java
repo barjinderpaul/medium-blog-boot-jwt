@@ -36,6 +36,19 @@ public class ApiExceptionHandler {
         return new ResponseEntity<>(errorMessage,httpStatus);
     }
 
+    @ExceptionHandler(value={UnauthorizedAccessException.class})
+    public ResponseEntity<Object> handleUnauthorizedAccessException(UnauthorizedAccessException e){
+        HttpStatus httpStatus = HttpStatus.FORBIDDEN;
+        ErrorMessage errorMessage = new ErrorMessage(
+          403,
+          e.getMessage(),
+        "Go to localhost:8080/swagger-ui.html#/ for the documentation",
+        HttpStatus.FORBIDDEN
+        );
+        log.error("Unauthorized access ",e);
+        return new ResponseEntity<>(errorMessage,httpStatus);
+    }
+
     @ExceptionHandler(value = {GenericException.class})
     public ResponseEntity<Object> handleGenericException(GenericException e){
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
