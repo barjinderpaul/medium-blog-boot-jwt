@@ -43,12 +43,12 @@ public class UserServiceImplementation implements UserService {
         user.setPassword(bCryptPasswordEncoder.encode(password));
         user.setEmail(email);
 
-        Role userRole = roleRepository.findByRoleName("ADMIN");
+        Role userRole = roleRepository.findByRoleName("USER");
         if(userRole == null ){
             Role userR = new Role();
-            userR.setRoleName("ADMIN");
+            userR.setRoleName("USER");
             roleRepository.save(userR);
-            userRole = roleRepository.findByRoleName("ADMIN");
+            userRole = roleRepository.findByRoleName("USER");
         }
         Set<Role> userRoles = new HashSet<>();
         userRoles.add(userRole);
