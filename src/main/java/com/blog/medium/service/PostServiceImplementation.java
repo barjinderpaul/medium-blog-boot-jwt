@@ -162,6 +162,7 @@ public class PostServiceImplementation implements PostService {
             if(categoryFound == null){
                 Category newCategory = new Category();
                 newCategory.setCategoryName(category);
+                categoryRepository.save(newCategory);
                 categoryFound = newCategory;
             }
             checkValidCategory(categoryFound);
@@ -212,6 +213,7 @@ public class PostServiceImplementation implements PostService {
             if(category == null) {
                 Category newCategory = new Category();
                 newCategory.setCategoryName(categoryName);
+                categoryRepository.save(newCategory);
                 category = newCategory;
             }
             checkValidCategory(category);
