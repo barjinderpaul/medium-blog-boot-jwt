@@ -6,6 +6,7 @@ import com.blog.medium.model.User;
 import com.blog.medium.repository.RoleRepository;
 import com.blog.medium.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -20,6 +21,9 @@ public class UserServiceImplementation implements UserService {
 
     @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
     public User getUserById(Long id) {
@@ -36,7 +40,7 @@ public class UserServiceImplementation implements UserService {
         User user = new User();
 
         user.setUsername(username);
-        user.setPassword(password);
+        user.setPassword(bCryptPasswordEncoder.encode(password));
         user.setEmail(email);
 
         Role userRole = roleRepository.findByRoleName("USER");
@@ -61,7 +65,7 @@ public class UserServiceImplementation implements UserService {
         User user = new User();
 
         user.setUsername(username);
-        user.setPassword(password);
+        user.setPassword(bCryptPasswordEncoder.encode(password));
         user.setEmail(email);
 
         Role userRole = roleRepository.findByRoleName("ADMIN");
