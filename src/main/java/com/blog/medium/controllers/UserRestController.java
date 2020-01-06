@@ -26,7 +26,6 @@ public class UserRestController {
     public User adduser(@RequestParam("username") String username, @RequestParam("password") String password, @RequestParam("email") String email){
 
         Long userId = userService.saveUser(username, password, email);
-        System.out.println("ROLES FOR THE USER = " + username + " : "+ userService.getUserById(userId).getRoles());
         return userService.getUserById(userId);
     }
 
@@ -38,7 +37,6 @@ public class UserRestController {
     @PostMapping("/api/admin")
     public User addAdminUser(@RequestParam("username") String username, @RequestParam("password") String password, @RequestParam("email") String email) {
         Long userId = userService.saveAdminUser(username, password, email);
-        System.out.println("ROLES FOR THE USER = " + username + " : "+ userService.getUserById(userId).getRoles());
         return userService.getUserById(userId);
     }
 }

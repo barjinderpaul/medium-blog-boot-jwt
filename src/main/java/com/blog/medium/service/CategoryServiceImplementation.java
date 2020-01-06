@@ -25,30 +25,8 @@ public class CategoryServiceImplementation implements CategoryService {
     PostRepository postRepository;
 
     @Override
-    public List<Category> getAllTags() {
-        return (List<Category>) categoryRepository.findAll();
-    }
-
-    @Override
     public Category getCategory(Long id) {
         return categoryRepository.findById(id).get();
-    }
-
-    @Override
-    public List<Post> findJsonDataByCondition(Long categoryId,String categoryName, String orderBy, String direction, int page, int size) {
-        Sort sort = null;
-        if (direction.equals("ASC")) {
-            sort = Sort.by(orderBy).ascending();
-        }
-        if (direction.equals("DESC")) {
-            sort = Sort.by(orderBy).descending();
-        }
-        Pageable pageable = PageRequest.of(page, size, sort);
-//        Category category = categoryRepository.findById(categoryId).get();
-//        Page<Post> data = category.getPosts();
-        Page<Post> data= postRepository.findByCategories(categoryName,pageable);
-        System.out.println("PADASDASD DATAAA = " + data.getContent());
-        return data.getContent();
     }
 
     @Override

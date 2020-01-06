@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -32,6 +31,7 @@ public class PostServiceImplementation implements PostService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+
     public List<Post> getAllPosts() {
         return postRepository.findAllByOrderByIdAsc();
     }
@@ -46,9 +46,9 @@ public class PostServiceImplementation implements PostService {
 
     /*
     * Exception checks
-    * */
+    */
 
-    private void checkValidId(String id){
+    private void isValidId(String id){
         Long post_id;
         try {
             post_id = Long.parseLong(id);
@@ -58,23 +58,34 @@ public class PostServiceImplementation implements PostService {
         }
     }
 
-    private void checkPostAndUser(Post post, String username){
+    private void isValidTitleAndContent(String title, String content) {
+        if(title == null || title.equals("")){
+            throw new InvalidArgumentException("title cannot be null/empty");
+        }
+        if(content == null || content.equals("")) {
+            throw new InvalidArgumentException("content cannot be null/empty");
+        }
+    }
+
+    private void isValidPostAndUser(Post post, String username){
         if( !(post.getUser().getUsername().equals(username)) && !(userRepository.findByUsername(username).getRoles().toString().contains("ADMIN"))) {
             throw new UnauthorizedAccessException("Username : " + username + " has no right access to this post");
         }
     }
 
-    private void checkValidCategory(Category category) {
+    private void isValidCategory(Category category) {
         if(category == null){
             throw new NotFoundException("Please, enter a valid category. No category: " + category + " exists");
         }
     }
 
-    private void checkNullAndValidArguments(String username, String category, String orderBy, String direction, String operation, String page, String size){
+    private void isNotNullAndValidArguments(String username, String category, String orderBy, String direction, String operation, String page, String size){
 
+        /* is user valid */
         if( !(username.toLowerCase().equals("nouser")) && (userRepository.findByUsername(username.toLowerCase()) == null)){
             throw new NotFoundException("User: '" + username + "' does not exist");
         }
+        /* is valid category (more than 1 categories) */
         else if(category.contains(",")){
             String[] categories = category.split(",");
             for(String categoryName: categories){
@@ -87,6 +98,7 @@ public class PostServiceImplementation implements PostService {
                 }
             }
         }
+        /* is valid category (single category) */
         else if(!(category.equals("noTag"))){
             if(category == null) {
                 throw new InvalidArgumentException("No category: " + category +" exists");
@@ -98,34 +110,37 @@ public class PostServiceImplementation implements PostService {
                 }
             }
         }
-
+        /* is valid page size (minimum posts) */
         if(Integer.parseInt(size)<1){
-            throw new InvalidArgumentException("Posts fetch size cannot be less than 0");
+            throw new InvalidArgumentException("Posts fetch size cannot be less than 1");
         }
-
+        /* is valid page size (maximum posts) */
         if(Integer.parseInt(size) > 25){
             throw new InvalidArgumentException("Posts fetch size should be less than 25");
         }
+        /* is valid sort direction */
         if(( !(direction.equals("ASC")) && (!(direction.equals("DESC"))) )) {
             throw new InvalidArgumentException("Direction/Sort By: " + direction + " is not valid");
         }
+        /* is valid orderBy */
         if((!(orderBy.equals("CreateDateTime")) && !(orderBy.equals("UpdateDateTime")))){
             throw new InvalidArgumentException("Order By: " + orderBy + " is not valid");
         }
+        /* is valid operation */
         if((!(operation.equals("and")) && !(operation.equals("or")))){
             throw new InvalidArgumentException("operation: " + operation + " not valid");
         }
 
     }
 
-
-    /* CRUD Operations */
+    /*
+    * CRUD Operations
+    */
 
     public Post getPost(String id) {
+        isValidId(id);
 
-        checkValidId(id);
         Long postId = Long.parseLong(id);
-
         Optional<Post> post = postRepository.findById(postId);
         if( !(post.isPresent() ) ){
             throw new NotFoundException("GET: No post found with id + " + id);
@@ -134,28 +149,22 @@ public class PostServiceImplementation implements PostService {
     }
 
     public Long addPost(String title, String content, List<String> categories, String username) {
-    /*
-    No user exists:
-    User user = new User(); user.setEmail("admin@admin.com");user.setUsername("admin");user.setPassword("admin");
-    */
+
+        isValidTitleAndContent(title, content);
+
         User userDB = userRepository.findByUsername(username);
         if(userDB == null) {
             throw new InvalidArgumentException("User: " + username + " does not exists");
         }
         Optional<User> userOptional = userRepository.findById(userDB.getId());
-/*
-        if(!(userOptional.isPresent())){
-            throw new NotFoundException("User with id = " + id + " not found");
-        }
-*/
+
         User user = userOptional.get();
         Post post = new Post();
+
         post.setPublishedAt(LocalDateTime.now());
         post.setTitle(title);
         post.setContent(content);
         post.setUser(user);
-
-        System.out.println("Categories = " + categories.toString());
 
         for (String category : categories) {
             Category categoryFound = categoryRepository.findByCategoryName(category);
@@ -165,12 +174,11 @@ public class PostServiceImplementation implements PostService {
                 categoryRepository.save(newCategory);
                 categoryFound = newCategory;
             }
-            checkValidCategory(categoryFound);
+            isValidCategory(categoryFound);
+
             categoryFound.getPosts().add(post);
             post.getCategories().add(categoryFound);
         }
-
-
 
         user.getPosts().add(post);
         userRepository.save(user);
@@ -178,32 +186,32 @@ public class PostServiceImplementation implements PostService {
         return id;
     }
 
-    public void deletePost(Long id, String username) {
+    public void deletePost(String id, String username) {
+        isValidId(id);
 
-        Optional<Post> optionalPost = postRepository.findById(id);
-
+        Long postId = Long.parseLong(id);
+        Optional<Post> optionalPost = postRepository.findById(postId);
         if(!(optionalPost.isPresent() ) ){
-            throw new NotFoundException("DELETE : No post found with id + " + id);
+            throw new NotFoundException("DELETE : No post found with id + " + postId);
         }
 
         Post post = optionalPost.get();
-
-        checkPostAndUser(post,username);
-
-        postRepository.deleteById(id);
+        isValidPostAndUser(post,username);
+        postRepository.deleteById(postId);
     }
 
     public Long updatePost(String id, String title, String content, List<String> categoriesList, String username) {
-        checkValidId(id);
-        Long postId = Long.parseLong(id);
+        isValidId(id);
+        isValidTitleAndContent(title, content);
 
+        Long postId = Long.parseLong(id);
         Optional<Post> optionalPost = postRepository.findById(postId);
         if(!(optionalPost.isPresent())){
                 throw new NotFoundException("PUT : No post found with id + " + postId);
         }
         Post postFromDB = optionalPost.get();
 
-        checkPostAndUser(postFromDB,username);
+        isValidPostAndUser(postFromDB,username);
 
         postFromDB.setContent(content);
         postFromDB.setTitle(title);
@@ -216,7 +224,7 @@ public class PostServiceImplementation implements PostService {
                 categoryRepository.save(newCategory);
                 category = newCategory;
             }
-            checkValidCategory(category);
+            isValidCategory(category);
             if (!(postFromDB.getCategories().contains(category))) {
                 postFromDB.getCategories().add(category);
                 category.getPosts().add(postFromDB);
@@ -236,8 +244,8 @@ public class PostServiceImplementation implements PostService {
 
     @Override
     public Long updatePostPatch(String id, String title, String content, String[] categories, String username) {
+        isValidId(id);
 
-        checkValidId(id);
         Long postId = Long.parseLong(id);
 
         Optional postOptional = postRepository.findById(postId);
@@ -245,24 +253,20 @@ public class PostServiceImplementation implements PostService {
             throw new NotFoundException("PATCH : No post found with id + " + postId);
         }
         Post post = (Post) postOptional.get();
-
-        System.out.println("USERNAME, USERNAME POST :" + username + " " + post.getUser().getUsername());
-
-        checkPostAndUser(post,username);
+        isValidPostAndUser(post,username);
 
         if(!(title.equals(""))){
-            System.out.println("Title here");
             post.setTitle(title);
         }
         if(!(content.equals(""))){
-            System.out.println("Content here");
             post.setContent(content);
         }
+
         Set<Category> categoriesPresent = post.getCategories();
         if(categories!= null && categories.length > 0) {
             for (String categoryName : categories) {
                 Category category = categoryRepository.findByCategoryName(categoryName);
-                checkValidCategory(category);
+                isValidCategory(category);
                 if (!(categoriesPresent.contains(category))) {
                     categoriesPresent.add(category);
                     category.getPosts().add(post);
@@ -273,10 +277,11 @@ public class PostServiceImplementation implements PostService {
         return post_id;
     }
 
-    /* Filter operations */
+    /*
+    * Filter operations
+    */
 
     private Pageable getPageable(String orderBy, String direction, Integer pageNo, Integer pageSize) {
-        System.out.println("orderBy , direction, pageNo, pageSize = " + orderBy + " " + direction + " " + pageNo + " " + pageSize);
         Sort sort = null;
         if (direction.equals("ASC")) {
             sort = Sort.by(orderBy).ascending();
@@ -296,7 +301,7 @@ public class PostServiceImplementation implements PostService {
 
     /*
      * filter posts by search methods:
-     * */
+     */
 
     private Page getPostsByUsernameAndSearchAndMultipleCategoriesAndOperation(String username, String tagName, String searchQuery, String orderBy, String direction, Integer pageNo, Integer pageSize) {
         String[] categories = tagName.split(",");
@@ -305,21 +310,23 @@ public class PostServiceImplementation implements PostService {
         List<Category> categoryList = new ArrayList<>();
         for (String categoryName : categories) {
             Category category = categoryRepository.findByCategoryName(categoryName);
-            checkValidCategory(category);
+            isValidCategory(category);
             categoryList.add(category);
         }
 
         List<Post> allPostsWithAllCategories = new ArrayList<>();
         for (Post post : allPosts) {
-            if (post.getCategories().containsAll(categoryList) && post.getUser().getUsername().toLowerCase().equals(username) && (post.getTitle().contains(searchQuery) || post.getContent().contains(searchQuery))) {
-                System.out.println("MATCH FOUND");
+            String postUsername = post.getUser().getUsername().toLowerCase();
+            String postTitle = post.getTitle();
+            String postContent = post.getContent();
+            if (post.getCategories().containsAll(categoryList) && postUsername.equals(username) && (postTitle.contains(searchQuery) || postContent.contains(searchQuery))) {
                 allPostsWithAllCategories.add(post);
             }
         }
         return getCustomPage(pageNo, pageSize, allPostsWithAllCategories);
     }
 
-    private Page getPostshWithSearchAndUserAndCategory(String username, String categoryName, String searchQuery, Pageable pageable) {
+    private Page getPostsWithSearchAndUserAndCategory(String username, String categoryName, String searchQuery, Pageable pageable) {
         return postRepository.findDistinctByUser_usernameAndCategories_categoryNameAndTitleContainingOrUser_usernameAndCategories_categoryNameAndContentContainingOrUser_usernameAndCategories_categoryNameAndCategories_categoryName(username, categoryName, searchQuery, username, categoryName, searchQuery, username, categoryName, searchQuery, pageable);
     }
 
@@ -339,49 +346,61 @@ public class PostServiceImplementation implements PostService {
         return postRepository.findDistinctByTitleContainsOrContentContainsOrCategories_categoryNameLike(searchQuery, searchQuery, searchQuery, pageable);
     }
 
-    public Page<Post> filterPostsMethodBySearch(String username, String tagName, String orderBy, String direction, String operation, String searchQuery, String page, String size) {
+    public Page<Post> filterPostsBySearch(String username, String tagName, String orderBy, String direction, String operation, String searchQuery, String page, String size) {
         Integer pageNo = Integer.parseInt(page);
         Integer pageSize = Integer.parseInt(size);
-        checkNullAndValidArguments(username, tagName, orderBy, direction, operation, page, size);
+        isNotNullAndValidArguments(username, tagName, orderBy, direction, operation, page, size);
         Pageable pageable = getPageable(orderBy, direction, pageNo, pageSize);
         String[] categories = tagName.split(",");
 
         if(searchQuery==null){
             throw new NotFoundException("Search query should not be null");
         }
-//        checkNullAndValidArguments(username, tagName, orderBy, direction, operation, page, size);
 
         Page data = null;
+
+        /* search with username and multiple categories */
         if (tagName.contains(",") && !(username.toLowerCase().equals("nouser"))) {
             data = getPostsByUsernameAndSearchAndMultipleCategoriesAndOperation(username, tagName, searchQuery, orderBy, direction, pageNo, pageSize);
-        } else if ((!(username.toLowerCase().equals("nouser"))) && tagName != null && !(tagName.toLowerCase().equals("notag"))) {
-            data = getPostshWithSearchAndUserAndCategory(username, tagName, searchQuery, pageable);
-        } else if ((!(username.toLowerCase().equals("nouser")))) {
+        }
+
+        /* search with username and single category */
+        else if ((!(username.toLowerCase().equals("nouser"))) && !(tagName.toLowerCase().equals("notag"))) {
+            data = getPostsWithSearchAndUserAndCategory(username, tagName, searchQuery, pageable);
+        }
+
+        /* search with username */
+        else if ((!(username.toLowerCase().equals("nouser")))) {
             data = getPostsWithSearchAndUsername(username, searchQuery, pageable);
-        } else if (tagName.contains(",")) {
+        }
+
+        /* search with multiple categories */
+        else if (tagName.contains(",")) {
             data = getPostsWithSearchAndMultipleTags(categories, searchQuery, pageable);
-        } else if (tagName != null && !(tagName.toLowerCase().equals("notag"))) {
+        }
+
+        /* search with single category */
+        else if (!(tagName.toLowerCase().equals("notag"))) {
             data = getPostsWithSearchAndCategory(tagName, searchQuery, pageable);
-        } else {
+        }
+
+        /* search with all posts */
+        else {
             data = getPostsWithSearch(searchQuery, orderBy, direction, pageNo, pageSize, pageable);
         }
+
         return data;
     }
 
     /*
      * filter posts without search methods
-     * */
+     */
 
-    private Page<Post> getPostsWithUserAndMultipleCategoriesOrOperation(String username, String[] categories, Pageable pageable) {
+    private Page getPostsWithUserAndMultipleCategoriesOrOperation(String username, String[] categories, Pageable pageable) {
         return postRepository.findByUser_usernameAndCategories_categoryNameIn(username, categories, pageable);
     }
 
-
-    private Page<Post> getPostsWithUserAndCategory(String username, String tagName, Pageable pageable) {
-        return postRepository.findAllByUser_usernameAndCategories_categoryNameContains(username, tagName, pageable);
-    }
-
-    private Page<Post> getPostsWithUserAndMultipleCategoriesAndOperation(String username, String[] categories, Integer pageNo, Integer pageSize) {
+    private Page getPostsWithUserAndMultipleCategoriesAndOperation(String username, String[] categories, Integer pageNo, Integer pageSize) {
         List<Post> allPosts = postRepository.findAll();
         List<Category> categoryList = new ArrayList<>();
         for (String categoryName : categories) {
@@ -395,13 +414,14 @@ public class PostServiceImplementation implements PostService {
                 allPostsWithAllCategories.add(post);
             }
         }
-
         return getCustomPage(pageNo, pageSize, allPostsWithAllCategories);
     }
 
+    private Page getPostsWithUserAndCategory(String username, String tagName, Pageable pageable) {
+        return postRepository.findAllByUser_usernameAndCategories_categoryNameContains(username, tagName, pageable);
+    }
 
-    @Override
-    public Page<Post> getPostsByMultipleTags(String[] categories, String orderBy, String direction, Integer pageNo, Integer pageSize) {
+    private Page getPostsByMultipleTags(String[] categories, String orderBy, String direction, Integer pageNo, Integer pageSize) {
 
         List<Post> allPosts = postRepository.findAll();
         List<Category> categoryList = new ArrayList<>();
@@ -418,14 +438,6 @@ public class PostServiceImplementation implements PostService {
         }
 
         return getCustomPage(pageNo, pageSize, allPostsWithAllCategories);
-    }
-
-    @Override
-    public Page<Post> getAllPostsHome(String page, String pageLength, String orderBy, String direction){
-        Integer pageNo = Integer.parseInt(page);
-        Integer pageSiae = Integer.parseInt(pageLength);
-        Pageable pageable = getPageable(orderBy, direction, pageNo, pageSiae);
-        return postRepository.findAllByOrderByIdAsc(pageable);
     }
 
     private Page<Post> getPostsByMultipleTagsOrOperation(String[] categories, Pageable pageable) {
@@ -445,16 +457,16 @@ public class PostServiceImplementation implements PostService {
     }
 
     public Page<Post> filterPostsMethodWithoutSearch(String username, String tagName, String orderBy, String direction, String operation, String page, String size) {
+
         Integer pageNo = Integer.parseInt(page);
         Integer pageSize = Integer.parseInt(size);
-        checkNullAndValidArguments(username, tagName, orderBy, direction, operation, page, size);
+        isNotNullAndValidArguments(username, tagName, orderBy, direction, operation, page, size);
         Pageable pageable = getPageable(orderBy, direction, pageNo, pageSize);
         String[] categories = tagName.split(",");
 
-
-
         Page data = null;
 
+        /* filter with user and multiple categories */
         if (tagName.contains(",") && (!(username.toLowerCase().equals("nouser")))) {
             if (operation.toLowerCase().equals("or")) {
                 data = getPostsWithUserAndMultipleCategoriesOrOperation(username, categories, pageable);
@@ -462,9 +474,13 @@ public class PostServiceImplementation implements PostService {
                 data = getPostsWithUserAndMultipleCategoriesAndOperation(username, categories, pageNo, pageSize);
             }
         }
-        else if (tagName != null && !(tagName.toLowerCase().equals("notag")) && !(username.equals("noUser"))) {
+
+        /* filter with user and single category */
+        else if (!(tagName.toLowerCase().equals("notag")) && !(username.equals("noUser"))) {
             data = getPostsWithUserAndCategory(username, tagName, pageable);
         }
+
+        /* filter with multiple categories */
         else if (tagName.contains(",")) {
             if (operation.toLowerCase().equals("and")) {
                 data = getPostsByMultipleTags(categories, orderBy, direction, pageNo, pageSize);
@@ -473,15 +489,22 @@ public class PostServiceImplementation implements PostService {
                 data = getPostsByMultipleTagsOrOperation(categories, pageable);
             }
         }
+
+        /* filter with user */
         else if (!(username.equals("noUser"))) {
             data = getPostsByUser(username, pageable);
         }
-        else if (tagName != null && !(tagName.toLowerCase().equals("notag"))) {
+
+        /* filter with single category */
+        else if (!(tagName.toLowerCase().equals("notag"))) {
             data = getPostsByCategory(tagName, pageable);
         }
+
+        /* all posts */
         else {
             data = getAllPosts(pageable);
         }
+
         return data;
     }
 }
