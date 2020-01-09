@@ -1,10 +1,9 @@
 package com.blog.medium.controllers;
 
-import com.blog.medium.config.MyUserDetailsService;
+import com.blog.medium.service.MyUserDetailsService;
 import com.blog.medium.jwtModels.AuthenticationRequest;
 import com.blog.medium.jwtModels.AuthenticationResponse;
 import com.blog.medium.util.JwtUtil;
-import io.swagger.models.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;

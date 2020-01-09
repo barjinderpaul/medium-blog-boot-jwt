@@ -1,4 +1,4 @@
-package com.blog.medium.config;
+package com.blog.medium.service;
 
 import com.blog.medium.model.User;
 import lombok.Getter;

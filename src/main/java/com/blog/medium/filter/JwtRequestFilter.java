@@ -1,6 +1,6 @@
 package com.blog.medium.filter;
 
-import com.blog.medium.config.MyUserDetailsService;
+import com.blog.medium.service.MyUserDetailsService;
 import com.blog.medium.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

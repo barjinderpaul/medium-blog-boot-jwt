@@ -1,8 +1,7 @@
-package com.blog.medium.config;
+package com.blog.medium.service;
 
 import com.blog.medium.model.User;
 import com.blog.medium.repository.UserRepository;
-import com.sun.security.auth.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.core.userdetails.User;
 
@@ -10,9 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.function.*;
-import java.util.ArrayList;
 
 @Service
 public class MyUserDetailsService  implements UserDetailsService {
